@@ -159,6 +159,11 @@ boxplot(Kidney$pcv, xlab = "Packed Cell Volume", horizontal = TRUE)
 boxplot(Kidney$wbcc, xlab = "White Blood Cell Count", horizontal = TRUE)
 boxplot(Kidney$rbcc, xlab = "Red Blood Cell Count", horizontal = TRUE)
 
+
+
+# Removing Extreme Values
+Kidney = Kidney[-c(22, 129, 62), ]
+
 ```
 
 # Associations Between Variables

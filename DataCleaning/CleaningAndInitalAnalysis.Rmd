@@ -26,7 +26,7 @@ Kidney[Kidney=="?"]=NA
 ```
 
 
-#Convert Columns to ints that need to be
+# Convert Columns to ints that need to be
 ```{r to-int}
 
 Kidney$age <- as.numeric(Kidney$age)
@@ -88,7 +88,7 @@ Kidney$classf=factor(Kidney$class, levels=c("ckd", "notckd"), labels=c(1,2))
 The plan here is to have 2 tables total. One will not touch the data at all; leaving the missing values alone. Another will replace the missing values with the mean or median value of each variable
 
 Kidney: has missing values, string representations for some variables (i.e. "normal"/"abnormal")
-kidneyMenas: has no missing values, uses mean for missing values that are represented as ints and mean for values that are reprsented as strings
+kidneyMenas: has no missing values, uses mean for missing values that are represented as ints and mean for values that are represented as strings
 
 ```{r deal-with-missing-vales}
 

@@ -15,8 +15,8 @@ library(Hmisc)    # replace missing values with mean
 
 ## Data loading
 ```{r data-load}
-#Kidney <- read.csv("C:/Users/Lucas/Desktop/School/Spring2021/DSC341/Final Project/Chronic_Kidney_Disease/kidney.csv")
-Kidney <- read.csv("C:/Users/SaraE/dsc341Project/kidney.csv")
+Kidney <- read.csv("C:/Users/Lucas/Desktop/School/Spring2021/DSC341/Final Project/Chronic_Kidney_Disease/kidney.csv")
+#Kidney <- read.csv("C:/Users/SaraE/dsc341Project/kidney.csv")
 ```
 ## Data Cleaning
 
@@ -102,10 +102,6 @@ kidneyMeans$imputed_bp <- with(kidneyMeans, impute(bp, mean))
 kidneyMeans$imputed_sg <- with(kidneyMeans, impute(sg, mean))
 kidneyMeans$imputed_al <- with(kidneyMeans, impute(al, mean))
 kidneyMeans$imputed_su <- with(kidneyMeans, impute(su, mean))
-kidneyMeans$imputed_rbc <- with(kidneyMeans, impute(rbcf, median))
-kidneyMeans$imputed_pc <- with(kidneyMeans, impute(pcf, mean))
-kidneyMeans$imputed_pcc <- with(kidneyMeans, impute(pccf, median))
-kidneyMeans$imputed_ba <- with(kidneyMeans, impute(baf, median))
 kidneyMeans$imputed_bgr <- with(kidneyMeans, impute(bgr, mean))
 kidneyMeans$imputed_bu <- with(kidneyMeans, impute(bu, mean))
 kidneyMeans$imputed_sc <- with(kidneyMeans, impute(sc, mean))
@@ -115,15 +111,8 @@ kidneyMeans$imputed_hemo <- with(kidneyMeans, impute(hemo, mean))
 kidneyMeans$imputed_pcv <- with(kidneyMeans, impute(pcv, mean))
 kidneyMeans$imputed_wbcc <- with(kidneyMeans, impute(wbcc, mean))
 kidneyMeans$imputed_rbcc <- with(kidneyMeans, impute(rbcc, mean))
-kidneyMeans$imputed_htn <- with(kidneyMeans, impute(htnf, median))
-kidneyMeans$imputed_dm <- with(kidneyMeans, impute(dmf, median))
-kidneyMeans$imputed_cad <- with(kidneyMeans, impute(cadf, median))
-kidneyMeans$imputed_appet <- with(kidneyMeans, impute(appetf, median))
-kidneyMeans$imputed_pe <- with(kidneyMeans, impute(pef, median))
-kidneyMeans$imputed_ane <- with(kidneyMeans, impute(anef, median))
 
-
-kidneyMeans = kidneyMeans[c(1, 38:61, 26)]
+kidneyMeans = kidneyMeans[c(1, 38:42, 7:10,  43:51, 20:26)]
 
 ```
 

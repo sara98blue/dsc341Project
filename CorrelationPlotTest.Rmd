@@ -1,0 +1,25 @@
+# Correlation Plot
+
+!!! THIS ASSUMES  KIDNEYMEANS IS LOADED ALREADY !!!
+
+```{r}
+
+library("corrplot")
+source("http://www.sthda.com/upload/rquery_cormat.r")
+
+kidneySubset <- kidneyMeans[, c(2:6, 11:19)]
+
+head(kidneySubset)
+
+rquery.cormat(kidneySubset)
+
+rquery.cormat(kidneySubset, type="upper")
+
+rquery.cormat(kidneySubset, type="full")
+
+cormat<-rquery.cormat(kidneySubset, graphType="heatmap")
+
+rquery.cormat(kidneySubset, type="full")
+
+
+```

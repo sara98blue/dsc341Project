@@ -15,8 +15,8 @@ library(Hmisc)    # replace missing values with mean
 
 ## Data loading
 ```{r data-load}
-Kidney <- read.csv("C:/Users/Lucas/Desktop/School/Spring2021/DSC341/Final Project/Chronic_Kidney_Disease/kidney.csv")
-#Kidney <- read.csv("C:/Users/SaraE/dsc341Project/kidney.csv")
+##Kidney <- read.csv("C:/Users/Lucas/Desktop/School/Spring2021/DSC341/Final Project/Chronic_Kidney_Disease/kidney.csv")
+Kidney <- read.csv("C:/Users/SaraE/dsc341Project/kidney.csv")
 ```
 ## Data Cleaning
 
@@ -161,7 +161,23 @@ boxplot(Kidney$rbcc, xlab = "Red Blood Cell Count", horizontal = TRUE)
 pairs(~pot+sod, data=Kidney)
 
 ```
+You can also embed plots, for example:
+```{r}
+##plot(x = kidneys$sod, y = kidneys$pot)set.seed(341)
+##data(kidneys)
+kidneyMeans <- as_tibble(kidneyMeans)
 
+x0 <- kidneyMeans %>% dplyr::select(imputed_age, pe, class)
+x0
+
+##x0$imputed_pe=factor(x0$imputed_pe, levels=c(1,2), labels=c("Yes","No"))
+
+k0 <- ggplot(x0, aes(x = imputed_age, y = pe, color = class)) + geom_jitter()
+
+
+k0 + labs(title = "Age and pe in patients with and with out chronic kidney disease", x ="patient age", y="padel Edema")
+
+```
 You can also embed plots, for example:
 ```{r}
 ##plot(x = kidneys$sod, y = kidneys$pot)set.seed(341)
@@ -202,14 +218,14 @@ kidneyMeans <- as_tibble(kidneyMeans)
 
 ##kidneyMeans$imputed_appet=factor(kidneyMeans$imputed_appet, levels=c(1,2), labels=c("good","poor"))
 
-x3 <- kidneyMeans %>% dplyr::select(imputed_appet, imputed_ane, class)
+x3 <- kidneyMeans %>% dplyr::select(appet, ane, class)
 x3
 
-x3$imputed_ane=factor(x3$imputed_ane, levels=c(1,2), labels=c("Yes","No"))
+##x3$ane=factor(x3$ane, levels=c(1,2), labels=c("Yes","No"))
 
-x3$imputed_appet=factor(x3$imputed_appet, levels=c(1,2), labels=c("good","poor"))
+##x3$appet=factor(x3$appet, levels=c(1,2), labels=c("good","poor"))
 
-k3 <- ggplot(x3, aes(x = imputed_appet, y = imputed_ane, color = class)) + geom_jitter()
+k3 <- ggplot(x3, aes(x = appet, y = ane, color = class)) + geom_jitter()
 
 
 k3 + labs(title = "Appeite and anemia with and without chronic kidney disease", x ="Appetite", y = "Anemia")
@@ -223,13 +239,13 @@ Checking Diabetes and blood glucose in chronic kidney disease
 kidneyMeans <- as_tibble(kidneyMeans)
 
 
-x4 <- kidneyMeans %>% dplyr::select(imputed_dm, imputed_bgr, class)
+x4 <- kidneyMeans %>% dplyr::select(dm, imputed_bgr, class)
 x4
 
 
-x4$imputed_dm=factor(x4$imputed_dm, levels=c(1,2), labels=c("yes","no"))
+##x4$imputed_dm=factor(x4$imputed_dm, levels=c(1,2), labels=c("yes","no"))
 
-k4 <- ggplot(x4, aes(x = imputed_dm, y = imputed_bgr, fill = class)) + geom_bar(stat = "identity")
+k4 <- ggplot(x4, aes(x = dm, y = imputed_bgr, fill = class)) + geom_bar(stat = "identity")
 
 
 k4 + labs(title = "Diabetes and Blood Glucose with and without chronic kidney disease", x ="Diabetes", y = "Blood Glucose")
@@ -257,6 +273,41 @@ k5 <- ggplot(x5, aes(x = imputed_sod, y = imputed_pot, color = class)) + geom_ji
 k5 + labs(title = "Pot and sodium with and without chronic kidney disease", x ="Sodium", y = "Potasium") +xlim(100,160) + ylim(0,10)
 
 ```
+Appeite and anemia in chronic kideny disease
+
+```{r}
+kidneyMeans <- as_tibble(kidneyMeans)
+
+##kidneyMeans$imputed_ane=factor(kidneyMeans$imputed_ane, levels=c(1,2), labels=c("Yes","No"))
+
+##kidneyMeans$imputed_appet=factor(kidneyMeans$imputed_appet, levels=c(1,2), labels=c("good","poor"))
+
+x6 <- kidneyMeans %>% dplyr::select(imputed_al, imputed_su, class)
+x6
+
+##x3$imputed_ane=factor(x3$imputed_ane, levels=c(1,2), labels=c("Yes","No"))
+
+##x3$imputed_appet=factor(x3$imputed_appet, levels=c(1,2), labels=c("good","poor"))
+
+k6 <- ggplot(x6, aes(x = imputed_al, y = imputed_su, color = class)) + geom_jitter()
+
+
+k6 + labs(title = " chronic kidney disease", x ="Sugar", y = "Albunin")
+
+```
+Red and white blood cell count in ckd
+```{r}
+kidneyMeans <- as_tibble(kidneyMeans)
+
+x7 <- kidneyMeans %>% dplyr::select(imputed_rbcc,imputed_wbcc, class)
+x7
+
+k7 <- ggplot(x7, aes(x = imputed_rbcc, y = imputed_wbcc, color = class)) + geom_jitter(width = .1)
+
+
+k7 + labs(title = "Red and and white blood cells with and without chronic kidney disease", x ="Red", y = "White") ##+xlim(100,160) + ylim(0,10)
+
+```
 
 ```{r}
 
@@ -264,6 +315,10 @@ table(kidneyMeans$class) # compute table of counts
 t=table(kidneyMeans$class)
 
 barplot(t, main="Chronic Kideny Disease Status")
+
+ggplot(kidneyMeans, aes(x = imputed_age, fill = class)) +
+    geom_bar(position = position_dodge()) +
+    theme_classic()
 
 ggplot(kidneyMeans, aes(x=imputed_age)) + geom_histogram(binwidth=.5, colour="black", fill="white") + facet_grid(class ~ .) + labs(title = "Age with and without chronic kidney disease", x ="age")
 ##summary(kidneyMeans$class)

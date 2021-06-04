@@ -1,0 +1,338 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#knitr::opts_knit$set(root.dir = "/tmp") 
+```
+
+```{r libraries-required, message=FALSE, warning=FALSE}
+library(tidyverse)  # data manipulation and visualization
+library(modelr)     # provides easy pipeline modeling functions
+library(broom)      # helps to tidy up model outputs
+library(VIM)      # missing value analysis
+library(mice)     # missing value analysis
+library(Hmisc)    # replace missing values with mean
+```
+
+
+## Data loading
+```{r data-load}
+##Kidney <- read.csv("C:/Users/Lucas/Desktop/School/Spring2021/DSC341/Final Project/Chronic_Kidney_Disease/kidney.csv")
+Kidney <- read.csv("C:/Users/SaraE/dsc341Project/kidney.csv")
+kidney
+```
+## Data Cleaning
+
+I'm going to start the cleaning process by re-coding missing values from "?" to "NA"
+```{r missing-recode}
+Kidney[Kidney=="?"]=NA
+```
+
+
+#Convert Columns to ints that need to be
+```{r to-int}
+
+Kidney$age <- as.numeric(Kidney$age)
+Kidney$bp <- as.numeric(Kidney$bp)
+Kidney$sg <- as.numeric(Kidney$sg)
+Kidney$al <- as.numeric(Kidney$al)
+Kidney$su <- as.numeric(Kidney$su)
+Kidney$bgr <- as.numeric(Kidney$bgr)
+Kidney$bu <- as.numeric(Kidney$bu)
+Kidney$sc <- as.numeric(Kidney$sc)
+Kidney$sod <- as.numeric(Kidney$sod)
+Kidney$pot <- as.numeric(Kidney$pot)
+Kidney$hemo <- as.numeric(Kidney$hemo)
+Kidney$pcv <- as.numeric(Kidney$pcv)
+Kidney$wbcc <- as.numeric(Kidney$wbcc)
+Kidney$rbcc <- as.numeric(Kidney$rbcc)
+```
+
+
+
+# Missing Values Analysis
+
+```{r missing-vals}
+
+# Find total amount of missing cells
+mean(is.na(Kidney)) * 100
+
+# Display percentage of missing values per column (variable)
+colMeans(is.na(Kidney)) * 100
+
+# Display the number of missing values per column (variable)
+colSums(is.na(Kidney))
+
+```
+
+
+# Redefine labels for categorical variables 
+
+This adds columns to the end of the table. Each new column is named after an existing categorical variable with an "f" for "float" added to the end. (i.e. rbc -> rbcf) These new columns hold numerical representaions of the categorical variable which allows us to do things like mean. 
+```{r define-labels}
+
+Kidney$rbcf=factor(Kidney$rbc, levels=c("normal","abnormal"), labels=c(1, 2))
+Kidney$pcf=factor(Kidney$pc, levels=c("normal","abnormal"), labels=c(1, 2))
+Kidney$pccf=factor(Kidney$pcc, levels=c("present", "notpresent"), labels=c(1,2))
+Kidney$baf=factor(Kidney$ba, levels=c("present", "notpresent"), labels=c(1,2))
+Kidney$htnf=factor(Kidney$htn, levels=c("yes", "no"), labels=c(1,2))
+Kidney$dmf=factor(Kidney$dm, levels=c("yes", "no"), labels=c(1,2))
+Kidney$cadf=factor(Kidney$cad, levels=c("yes", "no"), labels=c(1,2))
+Kidney$appetf=factor(Kidney$appet, levels=c("good", "poor"), labels=c(1,2))
+Kidney$pef=factor(Kidney$pe, levels=c("yes", "no"), labels=c(1,2))
+Kidney$anef=factor(Kidney$ane, levels=c("yes", "no"), labels=c(1,2))
+Kidney$classf=factor(Kidney$class, levels=c("ckd", "notckd"), labels=c(1,2))
+
+```
+
+
+# Deal with missing values
+
+The plan here is to have 2 tables total. One will not touch the data at all; leaving the missing values alone. Another will replace the missing values with the mean or median value of each variable
+
+Kidney: has missing values, string representations for some variables (i.e. "normal"/"abnormal")
+kidneyMenas: has no missing values, uses mean for missing values that are represented as ints and mean for values that are reprsented as strings
+
+```{r deal-with-missing-vales}
+
+kidneyMeans=Kidney
+kidneyMeans$imputed_age <- with(kidneyMeans, impute(age, mean))
+kidneyMeans$imputed_bp <- with(kidneyMeans, impute(bp, mean))
+kidneyMeans$imputed_sg <- with(kidneyMeans, impute(sg, mean))
+kidneyMeans$imputed_al <- with(kidneyMeans, impute(al, mean))
+kidneyMeans$imputed_su <- with(kidneyMeans, impute(su, mean))
+kidneyMeans$imputed_rbc <- with(kidneyMeans, impute(rbcf, median))
+kidneyMeans$imputed_pc <- with(kidneyMeans, impute(pcf, mean))
+kidneyMeans$imputed_pcc <- with(kidneyMeans, impute(pccf, median))
+kidneyMeans$imputed_ba <- with(kidneyMeans, impute(baf, median))
+kidneyMeans$imputed_bgr <- with(kidneyMeans, impute(bgr, mean))
+kidneyMeans$imputed_bu <- with(kidneyMeans, impute(bu, mean))
+kidneyMeans$imputed_sc <- with(kidneyMeans, impute(sc, mean))
+kidneyMeans$imputed_sod <- with(kidneyMeans, impute(sod, mean))
+kidneyMeans$imputed_pot <- with(kidneyMeans, impute(pot, mean))
+kidneyMeans$imputed_hemo <- with(kidneyMeans, impute(hemo, mean))
+kidneyMeans$imputed_pcv <- with(kidneyMeans, impute(pcv, mean))
+kidneyMeans$imputed_wbcc <- with(kidneyMeans, impute(wbcc, mean))
+kidneyMeans$imputed_rbcc <- with(kidneyMeans, impute(rbcc, mean))
+kidneyMeans$imputed_htn <- with(kidneyMeans, impute(htnf, median))
+kidneyMeans$imputed_dm <- with(kidneyMeans, impute(dmf, median))
+kidneyMeans$imputed_cad <- with(kidneyMeans, impute(cadf, median))
+kidneyMeans$imputed_appet <- with(kidneyMeans, impute(appetf, median))
+kidneyMeans$imputed_pe <- with(kidneyMeans, impute(pef, median))
+kidneyMeans$imputed_ane <- with(kidneyMeans, impute(anef, median))
+
+
+kidneyMeans = kidneyMeans[c(1, 38:61, 26)]
+
+```
+
+# Anaylisis of outylier and unusal values
+
+```{r outlier-analysis}
+
+# Shows stats for outliers
+
+#$stats = statistic used to build boxplot {min*, q1, median
+  #q3, max*} (min* and max* excluding extreme values)
+
+#$n = sample size
+
+#$out = the values of any data points which lie beyond the
+# extremes of the whiskers
+
+# The which(is.na ...) statement will show the ID number for the corresponding value
+
+b=boxplot.stats(Kidney$su)
+b
+
+which(is.na(match(Kidney$su, b$out))==FALSE)
+
+
+par(mfrow=c(3,4))
+boxplot(Kidney$age, xlab = "Age", horizontal = TRUE)
+boxplot(Kidney$bp, xlab = "Blood Pressure", horizontal = TRUE)
+boxplot(Kidney$su, xlab = "Sugar", horizontal = TRUE)
+boxplot(Kidney$bu, xlab = "Blood Urea", horizontal = TRUE)
+boxplot(Kidney$sc, xlab = "Serum Creatinine", horizontal = TRUE)
+boxplot(Kidney$sod, xlab = "Sodium", horizontal = TRUE)
+boxplot(Kidney$pot, xlab = "Potassium", horizontal = TRUE)
+boxplot(Kidney$hemo, xlab = "Hemoglobin", horizontal = TRUE)
+boxplot(Kidney$pcv, xlab = "Packed Cell Volume", horizontal = TRUE)
+boxplot(Kidney$wbcc, xlab = "White Blood Cell Count", horizontal = TRUE)
+boxplot(Kidney$rbcc, xlab = "Red Blood Cell Count", horizontal = TRUE)
+
+
+# Removing Extreme Values
+Kidney = Kidney[-c(22, 129, 62), ]
+
+```
+# Associations Between Variables
+
+```{r associtaions}
+
+##pairs(~age+bp+sg+su+bgr+bu+sc+sod+pot+hemo+pcv+wbcc+rbcc, data=Kidney)
+pairs(~pot+sod, data=Kidney)
+
+```
+
+You can also embed plots, for example:
+```{r}
+##plot(x = kidneys$sod, y = kidneys$pot)set.seed(341)
+##data(kidneys)
+kidneyMeans <- as_tibble(kidneyMeans)
+
+x0 <- kidneyMeans %>% dplyr::select(imputed_age, imputed_pe, class)
+x0
+
+x0$imputed_pe=factor(x0$imputed_pe, levels=c(1,2), labels=c("Yes","No"))
+
+k0 <- ggplot(x0, aes(x = imputed_age, y = imputed_pe, color = class)) + geom_jitter()
+
+k0 + labs(title = "Age and pe in patients with and with out chronic kidney disease", x ="patient age", y="pe")
+
+```
+
+
+You can also embed plots, for example:
+```{r}
+##plot(x = kidneys$sod, y = kidneys$pot)set.seed(341)
+##data(kidneys)
+kidneyMeans <- as_tibble(kidneyMeans)
+
+x <- kidneyMeans %>% dplyr::select(imputed_age, imputed_al, class)
+x
+
+k1 <- ggplot(x, aes(x = imputed_age, y = imputed_al, color = class)) + geom_jitter()
+
+k1 + labs(title = "Age and Ablubin in patients with and with out chronic kidney disease", x ="patient age", y="albulim level")
+
+```
+one outlier for sc exits and is not shown in the graph
+```{r}
+kidneyMeans <- as_tibble(kidneyMeans)
+
+x2 <- kidneyMeans %>% dplyr::select(imputed_sc, imputed_hemo, class)
+x2
+
+k2 <- ggplot(x2, aes(x = imputed_sc, y = imputed_hemo, color = class)) + geom_jitter()
+
+
+k2 + labs(title = "sc and hem with and without chronic kidney disease", x ="Sreum Creatinine", y = "Hemoglobin") + xlim(0,30)
+
+```
+
+
+
+
+Appeite and anemia in chronic kideny disease
+
+```{r}
+kidneyMeans <- as_tibble(kidneyMeans)
+
+##kidneyMeans$imputed_ane=factor(kidneyMeans$imputed_ane, levels=c(1,2), labels=c("Yes","No"))
+
+##kidneyMeans$imputed_appet=factor(kidneyMeans$imputed_appet, levels=c(1,2), labels=c("good","poor"))
+
+x3 <- kidneyMeans %>% dplyr::select(imputed_al, imputed_su, class)
+x3
+
+##x3$imputed_ane=factor(x3$imputed_ane, levels=c(1,2), labels=c("Yes","No"))
+
+##x3$imputed_appet=factor(x3$imputed_appet, levels=c(1,2), labels=c("good","poor"))
+
+k3 <- ggplot(x3, aes(x = imputed_al, y = imputed_su, color = class)) + geom_jitter()
+
+
+k3 + labs(title = " chronic kidney disease", x ="Sugar", y = "Albunin")
+
+```
+
+
+
+Checking Diabetes and blood glucose in chronic kidney disease
+```{r}
+kidneyMeans <- as_tibble(kidneyMeans)
+
+
+x4 <- kidneyMeans %>% dplyr::select(imputed_dm, imputed_bgr, class)
+x4
+
+
+x4$imputed_dm=factor(x4$imputed_dm, levels=c(1,2), labels=c("yes","no"))
+
+k4 <- ggplot(x4, aes(x = imputed_dm, y = imputed_bgr, fill = class)) + geom_bar(stat = "identity")
+
+
+k4 + labs(title = "Diabetes and Blood Glucose with and without chronic kidney disease", x ="Diabetes", y = "Blood Glucose")
+```
+
+
+
+
+
+
+
+
+
+Pot and sodium
+one outliner for sodium exits and is not shown in the graph (all ckd pot = 40, pot = )
+```{r}
+kidneyMeans <- as_tibble(kidneyMeans)
+
+x5 <- kidneyMeans %>% dplyr::select(imputed_sod,imputed_pot, class)
+x5
+
+k5 <- ggplot(x5, aes(x = imputed_sod, y = imputed_pot, color = class)) + geom_jitter(width = .1)
+
+
+k5 + labs(title = "Pot and sodium with and without chronic kidney disease", x ="Sodium", y = "Potasium") +xlim(100,160) + ylim(0,10)
+
+```
+
+Red and white blood cell count in ckd
+```{r}
+kidneyMeans <- as_tibble(kidneyMeans)
+
+x6 <- kidneyMeans %>% dplyr::select(imputed_rbcc,imputed_wbcc, class)
+x6
+
+k6 <- ggplot(x6, aes(x = imputed_rbcc, y = imputed_wbcc, color = class)) + geom_jitter(width = .1)
+
+
+k6 + labs(title = "Pot and sodium with and without chronic kidney disease", x ="Red", y = "White") ##+xlim(100,160) + ylim(0,10)
+
+```
+
+
+```{r}
+
+table(kidneyMeans$class) # compute table of counts
+t=table(kidneyMeans$class)
+
+barplot(t, main="Chronic Kideny Disease Status")
+
+ggplot(kidneyMeans, aes(x=imputed_age)) + geom_histogram(binwidth=.5, colour="black", fill="white") + facet_grid(class ~ .) + labs(title = "Age with and without chronic kidney disease", x ="age")
+##summary(kidneyMeans$class)
+
+```
+
+
+```{r}
+
+table(kidneyMeans$class) # compute table of counts
+t2=table(kidneyMeans$class)
+
+barplot(t2, main="Chronic Kideny Disease Status")
+
+ggplot(kidneyMeans, aes(x=imputed_sc)) + geom_histogram(binwidth=.5, colour="black", fill="white") + facet_grid(class ~ .) + labs(title = "Age with and without chronic kidney disease", x ="age")
+##summary(kidneyMeans$class)
+
+```
+
+
+
+
+
+
+
+
+
+

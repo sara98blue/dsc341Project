@@ -1,0 +1,1 @@
+This document will explain the structure of the git repo

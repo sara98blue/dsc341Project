@@ -63,6 +63,9 @@ colMeans(is.na(Kidney)) * 100
 # Display the number of missing values per column (variable)
 colSums(is.na(Kidney))
 
+# Remove Extreme Outliers
+Kidney <- Kidney[-c(129, 62, 22),]
+
 ## Remove rows where a nomninal value is NA
 Kidney = Kidney[complete.cases(Kidney[7:10]),]
 Kidney = Kidney[complete.cases(Kidney[20:25]),]

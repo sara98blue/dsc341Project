@@ -10,6 +10,7 @@ library(broom)      # helps to tidy up model outputs
 library(VIM)      # missing value analysis
 library(mice)     # missing value analysis
 library(Hmisc)    # replace missing values with mean
+library(corrplot)
 ```
 
 
@@ -157,6 +158,8 @@ boxplot(Kidney$rbcc, xlab = "Red Blood Cell Count", horizontal = TRUE)
 
 ```{r associtaions}
 
+
+
 ##pairs(~age+bp+sg+su+bgr+bu+sc+sod+pot+hemo+pcv+wbcc+rbcc, data=Kidney)
 pairs(~pot+sod, data=Kidney)
 
@@ -184,10 +187,10 @@ You can also embed plots, for example:
 ##data(kidneys)
 kidneyMeans <- as_tibble(kidneyMeans)
 
-x <- kidneyMeans %>% dplyr::select(imputed_age, imputed_al, class)
+x <- kidneyMeans %>% dplyr::select(imputed_sc, imputed_al, class)
 x
 
-k1 <- ggplot(x, aes(x = imputed_age, y = imputed_al, color = class)) + geom_jitter()
+k1 <- ggplot(x, aes(x = imputed_sc, y = imputed_al, color = class)) + geom_jitter()
 
 k1 + labs(title = "Age and Ablubin in patients with and with out chronic kidney disease", x ="patient age", y="albulim level")
 

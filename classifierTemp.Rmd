@@ -1,0 +1,108 @@
+---
+title: "R Notebook"
+author: "Sara Eghbalnia"
+output:
+  html_document:
+    df_print: paged
+---
+
+# Chapter 4 of Introduction to Data Mining: Classification: Comparing Decision Boundaries of Different Classifiers
+
+This code was created by Michael Hahsler.  The lab assignment will only use a portion of his original code.  For the complete code base please visit this web address.
+
+https://mhahsler.github.io/Introduction_to_Data_Mining_R_Examples/code/chap4_decisionboundary.html#decision-boundaries
+
+You will be using the following libraries.  Be sure to use install.packages() if you have not already installed these packages.
+
+```{r}
+library(scales)
+library(tidyverse)
+library(caret)
+
+```
+
+The following code will define a custom function.  You do not need to understand the code, but you will need to know how to apply it in the subsequent sections.
+
+```{r custom-functions}
+decisionplot <- function(model, x, cl = NULL, predict_type = "class",
+  resolution = 100) {
+
+  if(!is.null(cl)) {
+    x_data <- x %>% dplyr::select(-all_of(cl))
+    cl <- x %>% pull(cl)
+  } else cl <- 1
+  k <- length(unique(cl))
+
+  # resubstitution accuracy
+  prediction <- predict(model, x_data, type = predict_type)
+  if(is.list(prediction)) prediction <- prediction$class
+  if(is.numeric(prediction))
+    prediction <-  factor(prediction, labels = levels(cl))
+  else
+    prediction <- factor(prediction, levels = levels(cl))
+
+  cm <- confusionMatrix(data = prediction, reference = cl)
+  acc <- cm$overall["Accuracy"]
+
+  # evaluate model on a grid
+  r <- sapply(x[, 1:2], range, na.rm = TRUE)
+  xs <- seq(r[1,1], r[2,1], length.out = resolution)
+  ys <- seq(r[1,2], r[2,2], length.out = resolution)
+  g <- cbind(rep(xs, each = resolution), rep(ys, time = resolution))
+  colnames(g) <- colnames(r)
+  g <- as_tibble(g)
+
+  ### guess how to get class labels from predict
+  ### (unfortunately not very consistent between models)
+  prediction <- predict(model, g, type = predict_type)
+  if(is.list(prediction)) prediction <- prediction$class
+  if(is.numeric(prediction))
+    prediction <-  factor(prediction, labels = levels(cl))
+  else
+    prediction <- factor(prediction, levels = levels(cl))
+
+  g <- g %>% add_column(prediction)
+
+  ggplot(g, mapping = aes_string(
+    x = colnames(g)[1],
+    y = colnames(g)[2])) +
+    geom_tile(mapping = aes(fill = prediction)) +
+    geom_jitter(data = x, mapping =  aes_string(
+      x = colnames(x)[1],
+      y = colnames(x)[2],
+      shape = colnames(x)[3]), alpha = .5) +
+    labs(subtitle = paste("Training accuracy:", round(acc, 2)))
+}
+```
+
+## Iris Dataset
+
+```{r load-data}
+km <- kidneyMeans
+data(km)
+km <- as_tibble(km)
+class(km$class)
+km$class <- as.factor(km$class)
+class(km$fact)
+
+x <- km %>% dplyr::select(imputed_wbcc,imputed_rbcc, class)
+x
+```
+
+
+```{r plot-data}
+ggplot(x, aes(x = imputed_rbcc, y = imputed_wbcc, color = class)) + geom_jitter()
+```
+
+## K-Nearest Neighbors Classifier
+```{r model-plot-knn1}
+model <- x %>% knn3(km$class ~ ., data = ., k = 1)
+decisionplot(model, x, cl = "class") + labs(title = "kNN (1 neighbor)")
+```
+
+```{r model-plot-knn10}
+model <- x %>% knn3(km$class ~ ., data = ., k = 5)
+decisionplot(model, x, cl = "class") + labs(title = "kNN (10 neighbor)")
+```
+
+

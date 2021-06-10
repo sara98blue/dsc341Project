@@ -1,1 +1,10 @@
-This document will explain the structure of the git repo
+This document explains the structure of the git repo:
+
+1.) The kidney.csv(excel) is were we pulled in the data
+
+2.) Milestones folder holds the steps in the process of making our analysis:
+	a.) DataCleaning - cleaning of the data set
+	b.) DataAssociation - Created assoications between variables 
+	c.) Temp/trash - contains temporary files that are not needed and could be throw out
+
+3.) FinalAnalysisDocuments - hows the final output of our data one in rmd and one in a knitted html file 

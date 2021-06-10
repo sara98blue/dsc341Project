@@ -1,0 +1,137 @@
+---
+title: "R Notebook"
+author: "Sara Eghbalnia"
+output:
+  html_document:
+    df_print: paged
+---
+
+# Chapter 4 of Introduction to Data Mining: Classification: Comparing Decision Boundaries of Different Classifiers
+
+This code was created by Michael Hahsler.  The lab assignment will only use a portion of his original code.  For the complete code base please visit this web address.
+
+https://mhahsler.github.io/Introduction_to_Data_Mining_R_Examples/code/chap4_decisionboundary.html#decision-boundaries
+
+You will be using the following libraries.  Be sure to use install.packages() if you have not already installed these packages.
+
+```{r}
+library(scales)
+library(tidyverse)
+library(caret)
+
+```
+
+The following code will define a custom function.  You do not need to understand the code, but you will need to know how to apply it in the subsequent sections.
+
+```{r custom-functions}
+decisionplot <- function(model, x, cl = NULL, predict_type = "class",
+  resolution = 100) {
+
+  if(!is.null(cl)) {
+    x_data <- x %>% dplyr::select(-all_of(cl))
+    cl <- x %>% pull(cl)
+  } else cl <- 1
+  k <- length(unique(cl))
+
+  # resubstitution accuracy
+  prediction <- predict(model, x_data, type = predict_type)
+  if(is.list(prediction)) prediction <- prediction$class
+  if(is.numeric(prediction))
+    prediction <-  factor(prediction, labels = levels(cl))
+  else
+    prediction <- factor(prediction, levels = levels(cl))
+
+  cm <- confusionMatrix(data = prediction, reference = cl)
+  acc <- cm$overall["Accuracy"]
+
+  # evaluate model on a grid
+  r <- sapply(x[, 1:2], range, na.rm = TRUE)
+  xs <- seq(r[1,1], r[2,1], length.out = resolution)
+  ys <- seq(r[1,2], r[2,2], length.out = resolution)
+  g <- cbind(rep(xs, each = resolution), rep(ys, time = resolution))
+  colnames(g) <- colnames(r)
+  g <- as_tibble(g)
+
+  ### guess how to get class labels from predict
+  ### (unfortunately not very consistent between models)
+  prediction <- predict(model, g, type = predict_type)
+  if(is.list(prediction)) prediction <- prediction$class
+  if(is.numeric(prediction))
+    prediction <-  factor(prediction, labels = levels(cl))
+  else
+    prediction <- factor(prediction, levels = levels(cl))
+
+  g <- g %>% add_column(prediction)
+
+  ggplot(g, mapping = aes_string(
+    x = colnames(g)[1],
+    y = colnames(g)[2])) +
+    geom_tile(mapping = aes(fill = prediction)) +
+    geom_jitter(data = x, mapping =  aes_string(
+      x = colnames(x)[1],
+      y = colnames(x)[2],
+      shape = colnames(x)[3]), alpha = .5) +
+    labs(subtitle = paste("Training accuracy:", round(acc, 2)))
+}
+```
+
+## Iris Dataset
+
+```{r load-data}
+set.seed(341)
+data(iris)
+iris <- as_tibble(iris)
+
+
+x <- iris %>% dplyr::select(Petal.Length, Petal.Width, Species)
+x
+```
+
+## Q1) How many classes are evident in the Species column?  Do you anticipate a class imbalance problem? Why or why not?
+
+# Answer: 3 Classes are evident. I do not think that there will be a class imbalnce problem as the classes in species are evenly distributed.
+
+```{r plot-data}
+ggplot(x, aes(x = Petal.Length, y = Petal.Width, color = Species)) + geom_jitter()
+```
+
+## K-Nearest Neighbors Classifier
+```{r model-plot-knn1}
+model <- x %>% knn3(Species ~ ., data = ., k = 1)
+decisionplot(model, x, cl = "Species") + labs(title = "kNN (1 neighbor)")
+```
+
+```{r model-plot-knn10}
+model <- x %>% knn3(Species ~ ., data = ., k = 10)
+decisionplot(model, x, cl = "Species") + labs(title = "kNN (10 neighbor)")
+```
+
+## Q2  How does the parameter k influence the knn3 function?  What changed as a result of increasing k from 1 to 10?
+
+# Answer: It looks like k influences the accurancy of the predictions. When the value was 1 the prediction area was better than when the value was 10. This could be because there is a relativly small sample of data and even though the algorthim counts farther nieghbors as having less weight than closer ones, it is still able to throw off the calculation. I wonder if a number inbetween 1 and 10 would work the best.
+
+## Naive Bayes
+```{r naive-bayes}
+library(e1071) #be sure to install the package e1071
+model <- x %>% naiveBayes(Species ~ ., data = .)
+decisionplot(model, x, cl = "Species") + labs(title = "Naive Bayes")
+```
+
+## Decision Tree
+```{r decision-tree}
+library("rpart")
+model <- x %>% rpart(Species ~ ., data = .)
+decisionplot(model, x, cl = "Species") + labs(title = "CART")
+```
+
+
+```{r decision-tree-overfit}
+model <- x %>% rpart(Species ~ ., data = .,
+  control = rpart.control(cp = 0.001, minsplit = 1))
+decisionplot(model, x, cl = "Species") + labs(title = "CART (overfitting)")
+```
+
+##Q3 Training Accuracy increased when min split was reduced to 1.  What happened to the decision boundaries?  How would this impact new data where a Species prediction was required?
+
+# Answer: The decision boundries where split into more complicated peices. Because a min split of one alsos boundries to be split to seperate a single piece of data, the decision boundry is over fitting the data. This means that the error rate would likely increase if new data was added because these predictions are extremely specific to the data provided.
+

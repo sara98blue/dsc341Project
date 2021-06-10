@@ -78,60 +78,31 @@ decisionplot <- function(model, x, cl = NULL, predict_type = "class",
 ## Iris Dataset
 
 ```{r load-data}
-set.seed(341)
-data(iris)
-iris <- as_tibble(iris)
+km <- kidneyMeans
+data(km)
+km <- as_tibble(km)
+class(km$class)
+km$class <- as.factor(km$class)
+class(km$fact)
 
-
-x <- iris %>% dplyr::select(Petal.Length, Petal.Width, Species)
+x <- km %>% dplyr::select(imputed_wbcc,imputed_rbcc, class)
 x
 ```
 
-## Q1) How many classes are evident in the Species column?  Do you anticipate a class imbalance problem? Why or why not?
-
-# Answer: 3 Classes are evident. I do not think that there will be a class imbalnce problem as the classes in species are evenly distributed.
 
 ```{r plot-data}
-ggplot(x, aes(x = Petal.Length, y = Petal.Width, color = Species)) + geom_jitter()
+ggplot(x, aes(x = imputed_rbcc, y = imputed_wbcc, color = class)) + geom_jitter()
 ```
 
 ## K-Nearest Neighbors Classifier
 ```{r model-plot-knn1}
-model <- x %>% knn3(Species ~ ., data = ., k = 1)
-decisionplot(model, x, cl = "Species") + labs(title = "kNN (1 neighbor)")
+model <- x %>% knn3(km$class ~ ., data = ., k = 1)
+decisionplot(model, x, cl = "class") + labs(title = "kNN (1 neighbor)")
 ```
 
 ```{r model-plot-knn10}
-model <- x %>% knn3(Species ~ ., data = ., k = 10)
-decisionplot(model, x, cl = "Species") + labs(title = "kNN (10 neighbor)")
+model <- x %>% knn3(km$class ~ ., data = ., k = 5)
+decisionplot(model, x, cl = "class") + labs(title = "kNN (10 neighbor)")
 ```
 
-## Q2  How does the parameter k influence the knn3 function?  What changed as a result of increasing k from 1 to 10?
-
-# Answer: It looks like k influences the accurancy of the predictions. When the value was 1 the prediction area was better than when the value was 10. This could be because there is a relativly small sample of data and even though the algorthim counts farther nieghbors as having less weight than closer ones, it is still able to throw off the calculation. I wonder if a number inbetween 1 and 10 would work the best.
-
-## Naive Bayes
-```{r naive-bayes}
-library(e1071) #be sure to install the package e1071
-model <- x %>% naiveBayes(Species ~ ., data = .)
-decisionplot(model, x, cl = "Species") + labs(title = "Naive Bayes")
-```
-
-## Decision Tree
-```{r decision-tree}
-library("rpart")
-model <- x %>% rpart(Species ~ ., data = .)
-decisionplot(model, x, cl = "Species") + labs(title = "CART")
-```
-
-
-```{r decision-tree-overfit}
-model <- x %>% rpart(Species ~ ., data = .,
-  control = rpart.control(cp = 0.001, minsplit = 1))
-decisionplot(model, x, cl = "Species") + labs(title = "CART (overfitting)")
-```
-
-##Q3 Training Accuracy increased when min split was reduced to 1.  What happened to the decision boundaries?  How would this impact new data where a Species prediction was required?
-
-# Answer: The decision boundries where split into more complicated peices. Because a min split of one alsos boundries to be split to seperate a single piece of data, the decision boundry is over fitting the data. This means that the error rate would likely increase if new data was added because these predictions are extremely specific to the data provided.
 
